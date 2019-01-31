@@ -1,0 +1,336 @@
+package cs1302.arcade;
+
+import java.util.Random;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.shape.Rectangle;
+import javafx.stage.Stage;
+import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Text;
+import javafx.scene.control.Button;
+import javafx.geometry.Pos;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.geometry.Bounds;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Priority;
+import javafx.scene.control.Label;
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
+import javafx.util.Duration;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.control.ContentDisplay;
+import java.util.List;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+
+/**
+ * This class creates the arcade game 
+ * Snake and allows the user to play
+ *
+ * @author David Davenport & Emily D'Agostino
+ */
+public class Snake extends Application
+{
+/** 
+*enum for the directions the snake can go
+*/
+public enum Direction 
+  {
+     UP, DOWN, LEFT, RIGHT
+  }
+    protected Direction direction;
+    protected boolean isRunning = false;
+    protected boolean removable;
+    Timeline timeline = new Timeline();
+    ObservableList<Node> snakeLength;
+    KeyFrame keyframe;
+    Rectangle apple;
+    HBox hbox = new HBox();
+    Group snakeGroup;
+    Rectangle newSnakeHead;
+    Scene snakeScene;
+    double snakeTailY;
+    StackPane stackPane = new StackPane();
+    Pane pane = new Pane();
+    Label scoreLabel;
+    Label difficultyLabel;
+    protected double snakeSpeed = 0.2;
+    String difficulty = "EASY";
+    protected int difficultyIncrementor;
+    String stringScore = "0";
+    protected int score = 0;
+    double snakeTailX;
+    protected boolean isMoved;
+    Node snakeTail;
+/**
+* Begins the snake game 
+*/    
+    public void startSnake()
+     {
+    makeAlert();
+    snakeGroup = new Group();
+    scoreDifficultyIncrementor();
+    createApple();
+    snakeLength = snakeGroup.getChildren();
+    startSnakeHelper();
+    pane.getChildren().addAll(apple, snakeGroup);
+    }//startSnake
+/**
+* alerts the user of the controls
+* they need to play Snake
+*/    
+      private void makeAlert()
+      {
+      Alert alert = new Alert(AlertType.INFORMATION);
+      alert.setTitle("CONTROLS");
+      alert.setHeaderText("Use keyboard arrows to control Snake");
+      alert.showAndWait();
+      }//makeAlert  
+/**
+* Increments the score everytime the 
+* snake eats an apple and updates the difficulty
+* level accordingly
+*/      
+      public void scoreDifficultyIncrementor()
+     {
+      scoreLabel = new Label("SCORE: " + stringScore);
+      difficultyLabel = new Label("       DIFFICULTY: " + difficulty);
+      Region lSpring = new Region();
+      HBox.setHgrow(lSpring, Priority.ALWAYS);
+      Region rSpring = new Region();
+      HBox.setHgrow(rSpring, Priority.ALWAYS);
+      hbox.getChildren().addAll(scoreLabel, difficultyLabel);
+      pane.getChildren().add(hbox);
+     } //scoreDifficultyIncrementor
+     
+/**
+* Creates the apple that the snake
+* consumes and randomizes its location
+*/  
+    public void createApple()
+     {
+    apple = new Rectangle(20, 20);
+    apple.setFill(Color.RED);
+    apple.setTranslateX((int)(Math.random() * (400-20)) / 20 * 20);
+    apple.setTranslateY((int) (Math.random() * (400-20)) / 20 * 20);
+     }//createApple
+/**
+* switch used to assign direction and
+* change the snake head accordingly
+*/     
+     private void startSnakeHelperSwitch()
+     {
+     switch (direction){
+       case LEFT:
+        snakeTail.setTranslateX(snakeLength.get(0).getTranslateX() - 20);
+        snakeTail.setTranslateY(snakeLength.get(0).getTranslateY());
+        break;
+       case RIGHT:
+       snakeTail.setTranslateX(snakeLength.get(0).getTranslateX() + 20);
+       snakeTail.setTranslateY(snakeLength.get(0).getTranslateY());
+       break;
+       case UP:
+       snakeTail.setTranslateX(snakeLength.get(0).getTranslateX());
+       snakeTail.setTranslateY(snakeLength.get(0).getTranslateY() - 20);
+       break;
+       case DOWN:
+       snakeTail.setTranslateX(snakeLength.get(0).getTranslateX());
+       snakeTail.setTranslateY(snakeLength.get(0).getTranslateY() + 20);
+       break;
+       }//switch
+     }//startSnakeHelperSwitch
+/**
+*speeds up the snake for every difficulty
+*/    
+    private void speedUpSnake()
+    {
+    if (difficulty.equals("MEDIUM")||difficulty.equals("HARD") || difficulty.equals("EXPERT"))
+      {
+      snakeSpeed -= 0.05;
+      }//if
+    }//speedUpSnake
+/**
+* helps break up main startSnake method and 
+* assigns direction, starts animation,
+* and checks intersections and boundaries 
+*/     
+     private void startSnakeHelper(){
+    /*Keyframe used to establish animation for the snake*/
+    keyframe = new KeyFrame(Duration.seconds(snakeSpeed), event -> {
+     if (!isRunning){
+          return;
+     }//if
+     removable = snakeLength.size() > 1;
+     if (removable){
+     /*establishes tail of snake*/
+       snakeTail = snakeLength.remove(snakeLength.size() - 1);
+     }//if
+     else
+     {
+       snakeTail = snakeLength.get(0);
+     }//else
+     /*holds location of tail coordinates*/
+     snakeTailX = snakeTail.getTranslateX();
+     snakeTailY = snakeTail.getTranslateY();
+     startSnakeHelperSwitch();
+     if (removable){
+     /*new tail is added to List*/
+     snakeLength.add(0, snakeTail);
+     }//if
+     snakeAppleIntersection();
+     snakeIntersection();
+     checkBoundaries();
+     speedUpSnake();
+     });
+    timeline.setCycleCount(Timeline.INDEFINITE);
+    timeline.getKeyFrames().add(keyframe);
+    }//startSnakeHelper
+/** 
+* checks to see if snake intersects with
+* apple rectangle and adds new tail to snake
+* and randomizes apple again
+*/   
+     public void snakeAppleIntersection()
+     {
+       if (snakeTail.getTranslateX() == apple.getTranslateX() &&
+       snakeTail.getTranslateY() == apple.getTranslateY())
+       {
+       apple.setTranslateX((int)(Math.random() * (400-20)) / 20 * 20);
+       apple.setTranslateY((int) (Math.random() * (400-20)) / 20 * 20);
+       Rectangle newTail = new Rectangle(20,20);
+       newTail.setFill(Color.GREEN);
+       newTail.setTranslateX(snakeTailX);
+       newTail.setTranslateY(snakeTailY);
+       snakeLength.add(newTail);
+       score++;
+       stringScore = "" + score;
+       if (score == 10){
+        difficulty = "MEDIUM";
+        difficultyLabel.setText("       DIFFICULTY: " + difficulty);
+       }//if
+       if (score == 20){
+        difficulty = "HARD";
+        difficultyLabel.setText("       DIFFICULTY: " + difficulty);
+       }//if
+       if (score == 30){
+        difficulty = "EXPERT";
+        difficultyLabel.setText("       DIFFICULTY: " + difficulty);
+       }//if
+       scoreLabel.setText("SCORE: " + stringScore);
+       }//if
+     }//snakeAppleIntersection 
+/**
+*Checks to make sure snake doesn't go out
+* of bounds of scene and resets game if it does
+*/     
+     public void checkBoundaries()
+     {
+     if ((snakeTail.getTranslateX() < 0) || (snakeTail.getTranslateX() >= 400) 
+     || (snakeTail.getTranslateY() < 0) || (snakeTail.getTranslateY() >= 400))
+     {
+     restart();
+     }//if
+     }//checkBoundaries
+/**
+* checks for snake intersection of itself to see
+* if a rectangle passes through itself
+*/     
+     public void snakeIntersection()
+     {
+     for (Node rectangles : snakeLength)
+     {
+     if ((rectangles != snakeTail) && (rectangles.getTranslateX() == snakeTail.getTranslateX())
+     && (rectangles.getTranslateY() == snakeTail.getTranslateY()))
+     {
+             restart();
+             break;
+     }//if
+     }//for
+     }//snakeIntersection
+/**
+* restarts the game accordingly
+*/    
+     public void restart()
+     {
+       stop();
+       apple.setTranslateX((int)(Math.random() * (400-20)) / 20 * 20);
+       apple.setTranslateY((int) (Math.random() * (400-20)) / 20 * 20);
+       score = 0;
+       stringScore = "" + score;
+       scoreLabel.setText("SCORE: " + stringScore);
+       difficulty = "EASY";
+       difficultyLabel.setText("       DIFFICULTY: " + difficulty);
+       startGame();
+     }//restart
+/**
+* Begins the game by setting the snake to
+* size 0 and starting the animation
+*/     
+     public void startGame()
+     {
+     direction = direction.RIGHT;
+     newSnakeHead = new Rectangle(20, 20);
+     newSnakeHead.setFill(Color.GREEN);
+     snakeLength.add(newSnakeHead);
+     timeline.play();
+     isRunning = true;
+     }//startGame
+/**
+* stops the game and removes the tail for the snake
+*/     
+     public void stop()
+     {
+     isRunning = false;
+     timeline.stop();
+     snakeLength.clear();
+     }//stop
+/**
+* Begins the snake application
+*/     
+public void start(Stage snakeStage){ 
+snakeStage.setTitle("SNAKE");
+snakeScene = new Scene(pane, 400, 400);
+startSnake();
+/*takes in keyboard input and prevents head going over tail*/
+snakeScene.setOnKeyPressed(e -> {
+        switch (e.getCode())
+        {
+          case LEFT:
+          if (direction != Direction.RIGHT){
+           direction = Direction.LEFT;
+           break;}
+          case RIGHT:
+          if (direction != Direction.LEFT){
+           direction = Direction.RIGHT;
+           break;}
+          case UP: 
+          if (direction != Direction.DOWN){
+           direction = Direction.UP;
+           break;}
+          case DOWN:
+          if (direction != Direction.UP){
+           direction = Direction.DOWN;
+           break;}
+        }
+      });
+snakeStage.setScene(snakeScene);
+snakeStage.setResizable(false);
+startGame();
+snakeStage.show();
+}//start
+}//snake
