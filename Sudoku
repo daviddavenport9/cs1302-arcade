@@ -1,0 +1,320 @@
+package cs1302.arcade;
+
+import java.util.Random;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.scene.Group;
+import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.shape.Rectangle;
+import javafx.stage.Stage;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.control.Button;
+import javafx.geometry.Pos;
+import javafx.scene.layout.GridPane;
+import javafx.scene.paint.Color;
+import javafx.geometry.Bounds;
+import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.control.Label;
+import javafx.animation.Timeline;
+import javafx.animation.KeyFrame;
+import javafx.util.Duration;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.scene.input.KeyEvent;
+import java.util.List;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
+
+    
+/**
+* This class creates a Sudoku game app and 
+* allows the user to play 4 pre-made boards
+*
+* @author David Davenport & Emily D'Agostino
+*/
+    public class Sudoku{
+    private int col;
+    private int row;
+    TextField textField;
+    Scene sudokuScene;
+    GridPane sudokuGrid;
+    VBox sudokuVBox;
+    /* 2D array used to store values*/
+    TextField [][] textFieldArray = new TextField [9][9];
+    Text sudokuText = new Text("SUDOKU PUZZLE: UNSOLVED");
+    Text difficultyPrompt = new Text("SELECT A DIFFICULTY");
+    Text sudokuControls = new Text("");
+    Button solveSudokuButton = new Button("SOLVE PUZZLE");
+    Button easyMode = new Button("EASY");
+    Button intermediateMode = new Button("INTERMEDIATE");
+    Button hardMode = new Button("HARD");
+    Button impossibleMode = new Button("IMPOSSIBLE");
+/**
+* Constructs the grid of textfields and allows the
+* user to choose from 4 pre-made grids
+*
+*/
+    public void makeGrid() {
+    sudokuControls.setText("USE THE KEYBOARD TO PUT NUMBERS INTO BLANK SPACES");
+    for (col = 0; col < 9; col++) {
+     for (row = 0; row < 9; row++) {
+         /*makes a textfield at every location in grid*/
+         textFieldArray[col][row] = makeTextField();
+         }
+        } 
+    for (col = 0; col < 9; col++) {
+     for (row = 0; row < 9; row++) {
+        /*adds the 2D array to the gridpane */
+        sudokuGrid.add(textFieldArray[col][row], col, row);
+      }//for
+     }//for
+      gameModeSetOnActions();
+      solveSudokuButton.setOnAction(e -> {
+         solveSudoku();
+      });
+     sudokuVBox.getChildren().addAll(sudokuGrid, difficultyPrompt, 
+     easyMode, intermediateMode, hardMode, impossibleMode);
+     sudokuVBox.getChildren().addAll(sudokuText, solveSudokuButton, sudokuControls);
+     }//makeGrid 
+/**
+* This method creates the setOnActions for each 
+* difficulty of board choices
+*/     
+     public void gameModeSetOnActions()
+     {
+     easyMode.setOnAction(e -> {
+      for (col = 0; col < 9; col++) {
+     for (row = 0; row < 9; row++) {
+         textFieldArray[col][row].setText("");}} //both for loops
+      defaultLocationsEasy();
+      defaultLocationsEasyHelper();});
+      
+      intermediateMode.setOnAction(e -> {
+      for (col = 0; col < 9; col++) {
+     for (row = 0; row < 9; row++) {
+         textFieldArray[col][row].setText("");}}//both for loops 
+      defaultLocationsIntermediate();});
+      
+      hardMode.setOnAction(e -> {
+      for (col = 0; col < 9; col++) {
+     for (row = 0; row < 9; row++) {
+         textFieldArray[col][row].setText("");}}//both for loops
+      defaultLocationsHard();});
+      
+      impossibleMode.setOnAction(e -> {
+      for (col = 0; col < 9; col++) {
+     for (row = 0; row < 9; row++) {
+         textFieldArray[col][row].setText("");}}//both for loops
+      defaultLocationsImpossible();});
+      }//gameModeSetOnActions   
+     
+/**
+* Constructs the board of premade numbers for 
+* the easy version of Sudoku
+*/      
+     public void defaultLocationsEasy(){
+       textFieldArray[3][0].setText("2");
+       textFieldArray[4][0].setText("6");
+       textFieldArray[6][0].setText("7");
+       textFieldArray[8][0].setText("1");
+       textFieldArray[0][1].setText("6");
+       textFieldArray[1][1].setText("8");
+       textFieldArray[4][1].setText("7");
+       textFieldArray[7][1].setText("9");
+       textFieldArray[0][2].setText("1");
+       textFieldArray[1][2].setText("9");
+       textFieldArray[5][2].setText("4");
+       textFieldArray[6][2].setText("5");
+       textFieldArray[0][3].setText("8");
+       textFieldArray[1][3].setText("2");
+       textFieldArray[3][3].setText("1");
+       textFieldArray[7][3].setText("4");
+       textFieldArray[2][4].setText("4");
+       textFieldArray[3][4].setText("6");
+       textFieldArray[5][4].setText("2");
+       textFieldArray[6][4].setText("9");
+       textFieldArray[1][5].setText("5");
+       textFieldArray[5][5].setText("3");
+       textFieldArray[7][5].setText("2");
+       textFieldArray[8][5].setText("8");
+       textFieldArray[2][6].setText("9");
+       textFieldArray[3][6].setText("3");
+       textFieldArray[7][6].setText("7");
+       textFieldArray[8][6].setText("4");
+     }//defaultLocationsEasy
+/**
+* Helps break up defaultLocationsEasy to allow
+* the method to fit on one screen
+*/     
+     private void defaultLocationsEasyHelper()
+     {
+     textFieldArray[1][7].setText("4");
+     textFieldArray[4][7].setText("5");
+     textFieldArray[7][7].setText("3");
+     textFieldArray[8][7].setText("6");
+     textFieldArray[0][8].setText("7");
+     textFieldArray[2][8].setText("3");
+     textFieldArray[4][8].setText("1");
+     textFieldArray[5][8].setText("8");
+     }//defaultLocationsEasyHelper
+/**
+* Constructs the board of premade numbers for 
+* the intermediate version of Sudoku
+*/     
+     private void defaultLocationsIntermediate()
+     {
+       textFieldArray[1][0].setText("2");
+       textFieldArray[3][0].setText("6");
+       textFieldArray[5][0].setText("8");
+       textFieldArray[0][1].setText("5");
+       textFieldArray[1][1].setText("8");
+       textFieldArray[5][1].setText("9");
+       textFieldArray[6][1].setText("7");
+       textFieldArray[4][2].setText("4");
+       textFieldArray[0][3].setText("3");
+       textFieldArray[1][3].setText("7");
+       textFieldArray[6][3].setText("5");
+       textFieldArray[0][4].setText("6");
+       textFieldArray[8][4].setText("4");
+       textFieldArray[2][5].setText("8");
+       textFieldArray[7][5].setText("1");
+       textFieldArray[8][5].setText("3");
+       textFieldArray[4][6].setText("2");
+       textFieldArray[2][7].setText("9");
+       textFieldArray[3][7].setText("8");
+       textFieldArray[7][7].setText("3");
+       textFieldArray[8][7].setText("6");
+       textFieldArray[3][8].setText("3");
+       textFieldArray[5][8].setText("6");
+       textFieldArray[7][8].setText("9");
+     }//defaultLocationsIntermediate
+/**
+* Constructs the board of premade numbers for 
+* the hard version of Sudoku
+*/      
+     private void defaultLocationsHard()
+     {
+       textFieldArray[3][0].setText("6");
+       textFieldArray[6][0].setText("4");
+       textFieldArray[0][1].setText("7");
+       textFieldArray[5][1].setText("3");
+       textFieldArray[6][1].setText("6");
+       textFieldArray[4][2].setText("9");
+       textFieldArray[5][2].setText("1");
+       textFieldArray[7][2].setText("8");
+       textFieldArray[1][4].setText("5");
+       textFieldArray[3][4].setText("1");
+       textFieldArray[4][4].setText("8");
+       textFieldArray[8][4].setText("3");
+       textFieldArray[3][5].setText("3");
+       textFieldArray[5][5].setText("6");
+       textFieldArray[7][5].setText("4");
+       textFieldArray[8][5].setText("5");
+       textFieldArray[1][6].setText("4");
+       textFieldArray[3][6].setText("2");
+       textFieldArray[7][6].setText("6");
+       textFieldArray[0][7].setText("9");
+       textFieldArray[2][7].setText("3");
+       textFieldArray[1][8].setText("2");
+       textFieldArray[6][8].setText("1");
+     }//defaultLocationsHard
+/**
+* Constructs the board of premade numbers for 
+* the impossible version of Sudoku
+*/      
+     public void defaultLocationsImpossible()
+     {
+       textFieldArray[1][0].setText("2");
+       textFieldArray[3][1].setText("6");
+       textFieldArray[8][1].setText("3");
+       textFieldArray[1][2].setText("7");
+       textFieldArray[2][2].setText("4");
+       textFieldArray[4][2].setText("8");
+       textFieldArray[5][3].setText("3");
+       textFieldArray[8][3].setText("2");
+       textFieldArray[1][4].setText("8");
+       textFieldArray[4][4].setText("4");
+       textFieldArray[7][4].setText("1");
+       textFieldArray[0][5].setText("6");
+       textFieldArray[3][5].setText("5");
+       textFieldArray[4][6].setText("1");
+       textFieldArray[6][6].setText("7");
+       textFieldArray[7][6].setText("8");
+       textFieldArray[0][7].setText("5");
+       textFieldArray[5][7].setText("9");
+       textFieldArray[7][8].setText("4");
+     }//defaultLocationsImpossible
+/**
+* Solves the sudoku puzzle on each column and each row
+* to make sure no numbers overlap
+*/     
+     public boolean solveSudoku(){
+     boolean b = true;
+     for (int i = 0; i < 9; i++){//col
+       for (int j = 0; j < 9; j++){//row
+        /*Checks to make sure all locations are filled with a number*/
+         if ((textFieldArray[i][j].getText().trim().isEmpty()) || 
+         (textFieldArray[i][j].getText().equals(""))){
+           b = false;
+           return false;}
+      for (int k = 0; k < 9; k++){
+     /*Checks to make sure colums don't contain the same values*/
+    if (i != k && Integer.parseInt(textFieldArray[i][j].getText()) == 
+    Integer.parseInt(textFieldArray[k][j].getText())) {
+        b = false;}
+      }//for
+        for (int d = 0; d < 9; d++){
+      /*Checks to make sure rows don't contain the same values*/
+    if (j != d && Integer.parseInt(textFieldArray[i][j].getText())
+     == Integer.parseInt(textFieldArray[i][d].getText())) {
+         b = false;}//if
+        }//for
+     }//for
+      }//for
+      if (b == true){
+      /*The puzzle is solved if all locations are unique*/
+       sudokuText.setText("SUDOKU PUZZLE: SOLVED");}//if
+      else{
+      sudokuText.setText("SUDOKU PUZZLE: UNSOLVED");}
+      return b;
+     }//solveSudoku
+/**
+* makes textfields for the grid and only accepts 
+* one integer to allow for easy checkinf
+*/      
+     private TextField makeTextField()
+     {
+     textField = new TextField();
+     textField.setTextFormatter(new TextFormatter<Integer>(e -> {
+       if (e.getControlNewText().matches("\\d?")) 
+            {
+            return e ;
+            } 
+            else 
+            {
+                return null ;
+            }
+        }));
+        return textField ;
+     }//makeTextField
+/**
+* begins the application and the Sudoku app
+*/
+public void start(Stage sudokuStage){     
+sudokuStage.setTitle("SUDOKU");
+sudokuGrid = new GridPane();
+sudokuVBox = new VBox();
+sudokuScene = new Scene(sudokuVBox, 420, 420);
+sudokuStage.setScene(sudokuScene);
+sudokuStage.setResizable(false);
+sudokuStage.show();   
+ }//start   
+}//Sudoku
